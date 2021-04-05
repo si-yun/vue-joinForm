@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>관리자 가입인증</title>
+    <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+    <script src="/js/util.js"></script>
+    <script src="/js/common.js"></script>
+
+</head>
+
+<body>
+    <div class="container">
+        <h2>AccaS 이용에 감사드립니다.</h2>
+        <p>
+            본 페이지는 AccaS 관리자 등록 페이지로,계약자 본인에게만 가입 링크가 발송되었습니다.
+            <br> 계약 정보 확인 및 본인인증을 거쳐 가입이 완료됩니다.
+        </p>
+        <form>
+            <div>
+                <p>* 입력하신 정보는 계약정보 확인용입니다.
+                    <br>*계약번호를 입력하여 주세요
+                    <br><input type="text" v-model="contractForm.contractId" title="계약번호을 입력해주세요." placeholder="계약번호 입력">
+                </p>
+                <p> * 계약 담당자명을 입력하여 주세요.
+                    <br><input type="text" v-model="contractForm.contractNm" title="담당자명을 입력해주세요." placeholder="담당자명 입력">
+                </p>
+                <p v-show="showValidMessage">
+                    <small>
+                                    계약 내용과 일치하지 않습니다.
+                                    <br>다시 입력하여 주십시요.
+                            </small>
+                </p>
+                <input type="button" value="계약확인" @click="check()">
+                <input type="button" value="본인확인" @click="certif_check()" v-if="contractForm.validContractByJoin">
+            </div>
+
+        </form>
+    </div>
+
+
+    <script>
+        var container = new Vue({
+            el: '.container',
+            data: {
+                link: "AccaSCheckList.html",
+                contractForm: {
+                    contractId: '',
+                    validContractByJoin: '',
+                    contractNm: '',
+                    certification: '',
+                },
+                showValidMessage: false,
+                companyEntity: {
+                    sysMemberCompanySeq: '',
+                    companyName: ''
+                },
+                certiUserList: []
+            },
+
+            created() {
+                onload: {
+                    var qs = util.getQueryStringObject();
+                    var contractId = qs.cid;
+                    var vm = this;
+                    comm.get({
+                        url: "http://localhost:" + contractId,
+                        params: {}
+                    }, function(data) {
+
+                        console.log(data);
+                        vm.contractForm.contractId = data.contractId;
+                    })
+                }
+            },
+            methods: {
+                checkValid: function() {
+                    return true;
+                },
+                check: function() {
+                    console.log("체크")
+                    if (!this.checkValid()) {
+                        return false;
+                    }
+                    var sendData = this.contractForm;
+                    sendData["validContractByJoin"] = 'true';
+                    var vm = this;
+                    comm.post({
+                        url: "http://localhost:",
+                        params: sendData
+                    }, function(data) {
+                        vm.contractForm.validContractByJoin = data.validContractByJoin;
+                        vm.showValidMessage = !vm.contractForm.validContractByJoin;
+                    })
+                    console.log("계약 확인");
+                },
+                certif_check: function() {
+                    var vm = this;
+                    comm.post({
+                        url: "http://localhost:",
+                        params: {}
+                    }, function(data) {
+                        console.log(data)
+                        console.log("인증정보:  succuss");
+                        location.href = ("./join_step_contract_user.html")
+                    })
+                },
+            },
+        });
+    </script>
+</body>
+
+</html>

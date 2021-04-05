@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>개인정보 동의</title>
+    <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+    <script src="/js/util.js"></script>
+    <script src="/js/common.js"></script>
+</head>
+
+<body>
+    <div class="Privacy">
+        <h2>서비스 이용약관동의</h2>
+        <form>
+            <div v-for="(terms,index) in termsList">
+                <input type="checkbox" :id="'required'+index" v-model="termsList[index].isChecked" @change="_selected($event)">
+                <label :for="'required'+index">{{terms.itemCd}} ({{terms.requiredYn == 'Y'?"필수":"선택"}})</label><br>
+                <textarea>{{terms.itemCd}}</textarea>
+            </div>
+            <p>
+                <input type="checkbox" id="allChecked" v-model="termsForm.allChecked" @click="checkedAll($event.target.checked)"><label for="allChecked">전체동의</label>
+                <br>
+                <br>
+                <input type="button" value="약관 내용을 화인하고, 동의합니다." @click="SendAgree()" />
+            </p>
+        </form>
+    </div>
+    <script>
+        var Privacy = new Vue({
+            el: '.Privacy',
+            data() {
+                return {
+                    termsForm: {
+                        allChecked: '',
+                        checKed: [],
+                        itemCd: '',
+                        requiredYn: ''
+                    },
+                    certiId: [],
+                    termsList: [],
+                    selectedTerms: []
+                }
+            },
+            created() {
+                setSsionAtt: {
+                    if (false) {
+                        alert("인증 후 사용하세요.");
+                        return;
+                    }
+                    console.log('이용약관')
+                    this.getTermsList();
+                }
+            },
+            methods: {
+                checkValid: function() {
+                    var termsList = this.termsList;
+                    for (var i = 0; i < termsList.length; i++) {
+                        if (termsList[i].requiredYn == 'Y' && termsList[i].isChecked != true) {
+                            alert('필수 동의 약관이 있습니다. 내용을 확인하시고 동의하여 주십시오');
+                            return false;
+                        }
+                    }
+                    console.log(' 동의 완료 ');
+                    return true;
+                },
+                getTermsList: function() {
+                    var vm = this;
+                    comm.get({
+                        url: "http://localhost:",
+                        params: {}
+                    }, function(data) {
+                        var itemCdForm = data;
+                        vm.termsList = itemCdForm
+                            // itemCd: "1001"
+                            // requiredYn: "Y"
+                        vm.getMyTerms();
+                    })
+                },
+                getMyTerms: function() {
+                    var vm = this;
+                    comm.get({
+                        url: "http://localhost:",
+                        params: {}
+                    }, function(data) {
+                        console.log(data)
+                        if (data.length == 0) return;
+                        for (var i = 0; i < vm.termsList.length; i++) {
+                            var isAgree = false;
+                            for (var k = 0; k < data.length; k++) {
+                                if (data[k].itemCd == vm.termsList[i].itemCd && data[k].agreeYn == 'Y') {
+                                    isAgree = true;
+                                    break;
+                                }
+                            }
+                            vm.termsList[i].isChecked = isAgree;
+                        }
+                    })
+                },
+                _selected(e) {
+                    var allCnt = this.termsList.length;
+                    var checkedCnt = 0;
+                    for (let i in this.termsList) {
+                        if (this.termsList[i].isChecked == true) checkedCnt++;
+                    }
+                    this.termsForm.allChecked = (allCnt == checkedCnt);
+                },
+                checkedAll: function(checked) {
+                    this.termsForm.allChecked = checked;
+                    for (let i in this.termsList) {
+                        this.termsList[i].isChecked = checked;
+                    }
+                },
+                SendAgree: function() {
+                    if (!this.checkValid()) {
+                        return false;
+                    }
+                    var agreeList = this.termsList;
+                    agreeList.forEach(function(item, idx) {
+                        item.agreeYn = item.isChecked == true ? 'Y' : 'N';
+                    });
+                    var sendData = {
+                        "agreeList": agreeList
+                    };
+                    var vm = this;
+                    comm.post({
+                        url: "http://localhost:",
+                        params: sendData
+                    }, function(data) {
+                        debugger;
+                        console.log(data)
+                    })
+                    console.log("약관동의:  success");
+                    location.href = ("./join_step_info.html")
+
+
+                },
+
+            },
+        });
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>가입조회</title>
+    <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+    <script src="/js/util.js"></script>
+    <script src="/js/common.js"></script>
+</head>
+
+<body>
+    <div class="checkInfo">
+        <div>
+            <p>
+                인증이 완료되었습니다.
+            </p>
+            <p>
+                해당 번호로 가입된 ID가 존재합니다.
+                <br>기존 로그인 정보를 사용하시려면 사용할 아이디를 선택하여 주십시오.
+            </p>
+            <table>
+                <thead>
+                    <tr>
+                        <th>가입월</th>
+                        <th>가입아이디</th>
+                        <th>선택</th>
+                    </tr>
+                </thead>
+                <tbody id="certiUserList">
+                    <tr v-for="i in certiUserList">
+                        <td>{{i.regDttm}}</td>
+                        <td>{{i.userId}}</td>
+                        <td><input type="button" value="선택" @click="nextPage(i);" /></td>
+                    </tr>
+                </tbody>
+            </table>
+            <br>
+        </div>
+        <input type="button" value="회원가입" @click="nextPage();"><br>
+
+    </div>
+    <script>
+        var checkMessage = new Vue({
+            el: '.checkInfo',
+            data: {
+                certiUserList: [],
+            },
+            created() {
+                showCertiList: {
+                    var vm = this;
+                    comm.post({
+                        url: "http://localhost:",
+                        params: {}
+                    }, function(data) {
+                        console.log(data)
+                        vm.certiUserList = data;
+                    })
+                }
+            },
+            methods: {
+                nextPage: function(selectedUser) {
+                    var vm = this;
+                    if (util.null2Str(selectedUser, "") != "") {
+                        comm.get({
+                            url: "http://localhost:/" + selectedUser.userId,
+                            params: {}
+                        }, function(data) {
+                            console.log(data)
+                            console.log("가입아이디:  succuss");
+                            location.href = './join_step_terms.html'
+                        })
+                    } else {
+                        console.log("회원가입:  succuss");
+                        location.href = './join_step_terms.html';
+                    }
+                }
+            }
+        });
+    </script>
+</body>
+
+</html>

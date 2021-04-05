@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>회원가입</title>
+    <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+    <script src="/js/util.js"></script>
+    <script src="/js/common.js"></script>
+</head>
+
+<body>
+    <div class="joinForm">
+        <form>
+            <div>
+                <div>
+                    <p>
+                        <label for="">* 회사</label>
+                        <label for="">* 이름</label>
+                        <br>
+                        <input type="text" v-model="joinForm.companyEntity.companyName" disabled="disabled">
+                        <input type="text" v-model="joinForm.userNm" disabled="">
+                    </p>
+                </div>
+                <div>
+                    <p>
+                        <label for="">* 아이디</label>
+                        <br>
+                        <input type="text" v-model="joinForm.userId" placeholder="아이디를 입력하세요." :disabled="isSelectedUser" @change="changeFunc($event)">
+                        <input type="button" value="중복확인" v-if="!isSelectedUser" @click="checkId()">
+                        <small v-show="!isSelectedUser && showValidMessageId">
+                            중복된 아이디가 있습니다.
+                              </small>
+
+                    </p>
+                </div>
+                <div>
+                    <p>
+                        <label for="">* 비밀번호</label>
+                        <br>
+                        <input type="" v-model="joinForm.userPwd" value="" v-bind:placeholder="isSelectedUser?'':userPwdPlace">
+                        <br>
+                        <small v-show="showValidMessagePwd">{{messagePwd}}</small>
+                    </p>
+                </div>
+                <div>
+                    <p v-if="!isSelectedUser">
+                        <label for="">* 비밀번호 확인</label>
+                        <br>
+                        <input type="" value="" v-model="joinForm.checkUserPwd" v-if="!isSelectedUser">
+                        <br>
+                        <small v-show="showValidMessagePwd2">비밀번호가 일치하지 않습니다
+                        </small>
+                    </p>
+                </div>
+                <div>
+                    <p>
+                        <label for="">* 이메일</label>
+                        <br>
+                        <input type="" v-model="joinForm.email">
+                        <br>
+                        <small v-show="showValidMessageEmail">
+                            이메일 형식에 맞지 않습니다.
+                        </small>
+                    </p>
+                </div>
+                <div>
+                    <p>
+                        <label for="">* 휴대전화번호</label>
+                        <br>
+                        <input type="text" v-model="joinForm.hpNo" disabled="">
+                    </p>
+                </div>
+                <div>
+                    <label for="">* 지점/지사</label>
+                    <label for="">* 부서</label>
+                    <label for="">* 직급</label>
+                    <label for="">* 직책</label>
+                    <br>
+                    <div>
+                        <select name="" id="">
+                            <option selected value="0">지점/지사선택</option>
+                            <option v-for="(offices, index) in officesForm" :key="index"  :value="offices.code"> {{ offices.codeNm }} </option>
+                        </select>
+
+                        <select name="" id="">
+                            <option selected value="0">소속부서</option>
+                            <option v-for="(depts, index) in deptsList" :key="index"  :value="depts.code"> {{ depts.codeNm }} </option>
+                        </select>
+
+                        <select name="" id="">
+                            <option selected value="0">직급선택</option>
+                            <option v-for="(jobs, index) in jobsList" :key="index"  :value="jobs.code"> {{ jobs.codeNm }} </option>
+                        </select>
+
+                        <select name="" id="">
+                            <option selected value="0">직책선택</option>
+                            <option v-for="(positions, index) in positionsList" :key="index"  :value="positions.code"> {{ positions.codeNm }} </option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <p>
+                <input type="button" value="완료" @click="save()">
+            </p>
+        </form>
+    </div>
+
+    <script>
+        var signUp = new Vue({
+            el: '.joinForm',
+            data() {
+                return {
+                    joinForm: {
+                        userList: [],
+                        userNm: '',
+                        hpNo: '',
+                        email: '',
+                        userPwd: '',
+                        checkUserPwd: '',
+                        userId: '',
+                        userIdYn: '',
+                        newUserId: '',
+                        companyEntity: {
+                            companyName: ''
+                        },
+                    },
+                    officesForm: [],
+                    deptsList: [], //부서
+                    jobsList: [], //소속부서
+                    positionsList: [], //직책
+
+                    isSelectedUser: false,
+
+                    showValidMessageId: false,
+                    showValidMessagePwd: false,
+                    showValidMessagePwd2: false,
+                    showValidMessageEmail: false,
+                    userPwdPlace: "6~12자 영문, 숫자, 특수문자를 혼용하여 입력하여 주세요",
+                    messagePwd: '',
+                    messagePwd1: "비밀번호가 안전하지 않습니다. 6~12자 영문, 숫자, 특수문자를 혼용하여  입력하여 주십시오.  ( 이 문구는 샘플입니다 생성규칙에 따라 안내하여 주세요. ) ",
+
+
+                }
+            },
+            created() { //유저 정보
+                setUserInfo: {
+                    console.log('loading');
+                    var vm = this;
+                    comm.get({
+                        url: "http://localhost:",
+                        params: {}
+                    }, function(data) {
+                        vm.joinForm = data;
+                        vm.isSelectedUser = (util.null2Str(data.selectedUserId) != '');
+                        vm.joinForm.companyEntity = data.companyEntity;
+                        console.log("joinForm is    :")
+                        console.log(data)
+                    })
+                } //회사 정보
+                setOfficesInfo: {
+                    var vm = this;
+                    comm.get({
+                        url: "http://localhost:",
+                        params: {}
+                    }, function(data) {
+                        vm.officesForm = data;
+                        console.log("officesForm     :")
+                        console.log(data);
+                    })
+                } //부서 정보
+                setDeptsInfo: {
+                    var vm = this;
+                    comm.get({
+                        url: "http://localhost:",
+                        params: {}
+                    }, function(data) {
+                        vm.deptsList = data;
+                        console.log("depts     :")
+                        console.log(data);
+                    })
+                } //직급 정보
+                setJobsInfo: {
+                    var vm = this;
+                    comm.get({
+                        url: "http://localhost:",
+                        params: {}
+                    }, function(data) {
+                        vm.jobsList = data;
+                        console.log("jobs     :")
+                        console.log(data);
+                    })
+                } //직책 정보
+                setPositionsInfo: {
+                    var vm = this;
+                    comm.get({
+                        url: "http://localhost:",
+                        params: {}
+                    }, function(data) {
+                        vm.positionsList = data;
+                        console.log("positions     :")
+                        console.log(data);
+                    })
+                }
+
+
+            },
+            methods: {
+                checkValid: function() {
+                    var result = true;
+                    if (this.isSelectedUser != true) {
+                        if (this.joinForm.userIdYn != 'Y') {
+                            alert('아이디 중복 체크해주세요')
+                            return false;
+                        }
+
+                    }
+
+                    if (this.isSelectedUser != true) {
+                        this.showValidMessagePwd = false;
+                        if (!util.checkPwd(this.joinForm.userPwd)) {
+                            this.messagePwd = this.messagePwd1;
+                            this.showValidMessagePwd = true;
+                            result = false;
+                        }
+                    }
+
+                    if (this.isSelectedUser != true) {
+                        this.showValidMessagePwd2 = false;
+                        if (this.joinForm.userPwd != this.joinForm.checkUserPwd) {
+                            this.showValidMessagePwd2 = true;
+                            result = false;
+                        }
+                    }
+
+                    this.showValidMessageEmail = false;
+                    if (util.checkFormat(this.joinForm.email, 'EMAIL')) {
+                        this.showValidMessageEmail = true;
+                        result = false;
+                    }
+                    return result;
+                },
+                save: function() {
+                    if (!this.checkValid()) return false;
+                    var sendData = {};
+                    sendData["joinDto"] = this.joinForm;
+
+                    var vm = this;
+                    comm.post({
+                        url: "http://localhost:",
+                        params: {
+                            "userId": "shin",
+                            "userPwd": "",
+                            "email": "shin@a.co.kr",
+                            "joinExtr": {
+                                "officeCd": "1002",
+                                "deptCd": "1001",
+                                "jobCd": "1002",
+                                "positionCd": "1001"
+                            }
+
+                        }
+                    }, function(data) {
+                        console.log(data)
+                        vm.messagePwd = "비밀번호가 일치하지 않습니다.";
+                        vm.showValidMessagePwd = true;
+
+                    })
+                    location.href = ("./join_step_complete.html")
+                },
+                checkId: function() {
+
+                    debugger;
+                    if (this.joinForm.userId == this.joinForm.newUserId) {
+                        this.showValidMessageId = true;
+                        this.joinForm.userIdYn = 'N';
+                        return false;
+                    }
+                    this.showValidMessageId = false;
+                    this.joinForm.userIdYn = 'Y';
+                    return true;
+                },
+                changeFunc(event) {
+                    this.joinForm.userIdYn = 'N';
+                    console.log(event.target.value)
+                }
+            },
+        });
+    </script>
+</body>
+
+</html>
